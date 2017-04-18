@@ -44,7 +44,7 @@ namespace PropertyChangedHelper
 
     internal class LastPropertyChainEntry<T> : PropertyChainEntry
     {
-        public PropertyChangedHelper.PropertyChangedHandler<T> TypedCallback { get; set; }
+        public PropertyChangedHandler<T> TypedCallback { get; set; }
         private T _oldValue = default(T);
 
         public override void Attach(INotifyPropertyChanged observedInstance)

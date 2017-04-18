@@ -41,6 +41,7 @@
     <Compile Include="LastPropertyChainEntry.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyChainEntry.cs" />
+    <Compile Include="PropertyChangedHandler.cs" />
     <Compile Include="PropertyChangedHelper.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
