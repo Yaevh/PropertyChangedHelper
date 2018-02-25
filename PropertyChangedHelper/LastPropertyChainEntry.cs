@@ -1,36 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
+using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace PropertyChangedHelper
 {
     internal class LastPropertyChainEntry : PropertyChainEntry
     {
+        private readonly bool _isInitialized = false;
+
+        public LastPropertyChainEntry(INotifyPropertyChanged observedInstance, PropertyInfo observedProperty, PropertyChainEntry parent) :
+            base(observedInstance, observedProperty, parent)
+        {
+            _isInitialized = true;
+        }
+
         public Action Callback { get; set; }
 
-        public override void Attach(INotifyPropertyChanged observedInstance)
+
+        protected override void OnObservedInstanceChanging(INotifyPropertyChanged oldValue, INotifyPropertyChanged newValue)
         {
-            if (ObservedInstance != null)
-                ObservedInstance.PropertyChanged -= InvokeCallback;
-            ObservedInstance = observedInstance;
-            if (ObservedInstance != null)
-                ObservedInstance.PropertyChanged += InvokeCallback;
-            PerformInvokeCallback();
+            if (oldValue != null)
+                oldValue.PropertyChanged -= InvokeCallback;
+            if (newValue != null)
+                newValue.PropertyChanged += InvokeCallback;
+
+            if (!_isInitialized)
+                return;
+        }
+
+        protected override void Reattach(INotifyPropertyChanged observedInstance)
+        {
+            base.Reattach(observedInstance);
+            Callback?.Invoke();
         }
 
         private void InvokeCallback(object sender, PropertyChangedEventArgs args)
         {
             if (args.PropertyName == ObservedProperty.Name)
-                PerformInvokeCallback();
-        }
-
-        private void PerformInvokeCallback()
-        {
-            if (Callback != null)
-                Callback();
+                Callback?.Invoke();
         }
 
         public override void Dispose()
@@ -44,16 +53,39 @@ namespace PropertyChangedHelper
 
     internal class LastPropertyChainEntry<T> : PropertyChainEntry
     {
-        public PropertyChangedHandler<T> TypedCallback { get; set; }
+        private readonly bool _isInitialized = false;
+
         private T _oldValue = default(T);
 
-        public override void Attach(INotifyPropertyChanged observedInstance)
+
+        public LastPropertyChainEntry(INotifyPropertyChanged observedInstance, PropertyInfo observedProperty, PropertyChainEntry parent) :
+            base(observedInstance, observedProperty, parent)
         {
-            if (ObservedInstance != null)
-                ObservedInstance.PropertyChanged -= InvokeCallback;
-            ObservedInstance = observedInstance;
-            if (ObservedInstance != null)
-                ObservedInstance.PropertyChanged += InvokeCallback;
+            _isInitialized = true;
+        }
+
+
+        public Action<T, T> Callback { get; set; }
+        
+        protected override void OnObservedInstanceChanging(INotifyPropertyChanged oldInstance, INotifyPropertyChanged newInstance)
+        {
+            if (oldInstance != null)
+                oldInstance.PropertyChanged -= InvokeCallback;
+            if (newInstance != null)
+                newInstance.PropertyChanged += InvokeCallback;
+            
+            if (_isInitialized)
+                PerformInvokeCallback();
+
+            if (newInstance == null)
+                _oldValue = default(T);
+            else
+                _oldValue = (T)ObservedProperty.GetValue(newInstance);
+        }
+
+        protected override void Reattach(INotifyPropertyChanged observedInstance)
+        {
+            base.Reattach(observedInstance);
             PerformInvokeCallback();
         }
 
@@ -65,10 +97,15 @@ namespace PropertyChangedHelper
 
         private void PerformInvokeCallback()
         {
-            if (TypedCallback == null)
-                return;
             var newValue = ObservedInstance != null ? (T)ObservedProperty.GetValue(ObservedInstance) : default(T);
-            TypedCallback(_oldValue, newValue);
+
+            if (_oldValue == null && newValue == null)
+                return;
+            if (_oldValue != null && _oldValue.Equals(newValue))
+                return;
+
+            Callback?.Invoke(_oldValue, newValue);
+
             _oldValue = newValue;
         }
 
