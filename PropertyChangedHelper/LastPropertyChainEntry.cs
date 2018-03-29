@@ -6,51 +6,6 @@ using System.Text;
 
 namespace PropertyChangedHelper
 {
-    internal class LastPropertyChainEntry : PropertyChainEntry
-    {
-        private readonly bool _isInitialized = false;
-
-        public LastPropertyChainEntry(INotifyPropertyChanged observedInstance, PropertyInfo observedProperty, PropertyChainEntry parent) :
-            base(observedInstance, observedProperty, parent)
-        {
-            _isInitialized = true;
-        }
-
-        public Action Callback { get; set; }
-
-
-        protected override void OnObservedInstanceChanging(INotifyPropertyChanged oldValue, INotifyPropertyChanged newValue)
-        {
-            if (oldValue != null)
-                oldValue.PropertyChanged -= InvokeCallback;
-            if (newValue != null)
-                newValue.PropertyChanged += InvokeCallback;
-
-            if (!_isInitialized)
-                return;
-        }
-
-        protected override void Reattach(INotifyPropertyChanged observedInstance)
-        {
-            base.Reattach(observedInstance);
-            Callback?.Invoke();
-        }
-
-        private void InvokeCallback(object sender, PropertyChangedEventArgs args)
-        {
-            if (args.PropertyName == ObservedProperty.Name)
-                Callback?.Invoke();
-        }
-
-        public override void Dispose()
-        {
-            if (ObservedInstance == null)
-                return;
-            ObservedInstance.PropertyChanged -= InvokeCallback;
-            base.Dispose();
-        }
-    }
-
     internal class LastPropertyChainEntry<T> : PropertyChainEntry
     {
         private readonly bool _isInitialized = false;

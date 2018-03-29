@@ -26,7 +26,7 @@ namespace PropertyChangedHelper
         public PropertyChangedListener(TRoot rootObject, Expression<Func<TRoot, TProperty>> selectorExpression, Action callback)
         {
             var memberChain = new MemberChainBuilder().BuildMemberChain(selectorExpression);
-            _listenerChain = new ListenerChainBuilder().BuildListenerChain(rootObject, memberChain, callback);
+            _listenerChain = new ListenerChainBuilder().BuildListenerChain<TProperty>(rootObject, memberChain, callback);
         }
 
         /// <summary>
