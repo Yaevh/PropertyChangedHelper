@@ -48,8 +48,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="UntypedPropertyChangedHelperTests.cs" />
-    <Compile Include="TypedPropertyChangedHelperTests.cs" />
+    <Compile Include="PropertyChangedListenerSpec.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
